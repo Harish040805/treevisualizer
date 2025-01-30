@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Binary Tree Visualizer</title>
+    <link rel="stylesheet" href="Tree Visualizer CSS.css">
+	<link rel="icon" type="image/x-icon" href="https://t3.ftcdn.net/jpg/09/03/38/26/360_F_903382617_o2vVixfgvnDBsXF3WoejB1ss2MIwwSxI.jpg">
+</head>
+<body>
+    <div class="container">
+        <h1>Binary Tree Visualizer</h1>
+        <center>
+            <input id="input-element" type="number" placeholder="Enter a number to insert">
+            <button id="insert-button">Insert</button>
+            <br><br>
+            <input id="delete-element" type="number" placeholder="Enter a number to delete">
+            <button id="delete-button">Delete</button>
+            <br><br>
+            <button id="reset-button">Reset</button>
+            <br><br>
+        </center>
+        <div id="tree-visualization"></div>
+    </div>
+    <script>
+        const inputElement = document.getElementById('input-element');
+        const insertButton = document.getElementById('insert-button');
+        const resetButton = document.getElementById('reset-button');
+        const deleteElement = document.getElementById('delete-element');
+        const deleteButton = document.getElementById('delete-button');
+        const treeVisualization = document.getElementById('tree-visualization');
+
+        class Node {
+            constructor(value) {
+                this.value = value;
+                this.left = null;
+                this.right = null;
+            }
+        }
+
+        class BinaryTree {
+            constructor() {
+                this.root = null;
+            }
+
+            insert(value) {
+                const newNode = new Node(value);
+                if (this.root === null) {
+                    this.root = newNode;
+                } else {
+                    this._insertRecursive(this.root, newNode);
+                }
+            }
+
+            _insertRecursive(currentNode, newNode) {
+                if (newNode.value < currentNode.value) {
+                    if (currentNode.left === null) {
+                        currentNode.left = newNode;
+                    } else {
+                        this._insertRecursive(currentNode.left, newNode);
+                    }
+                } else {
+                    if (currentNode.right === null) {
+                        currentNode.right = newNode;
+                    } else {
+                        this._insertRecursive(currentNode.right, newNode);
+                    }
+                }
+            }
+
+            delete(value) {
+                this.root = this._deleteRecursive(this.root, value);
+            }
+
+            _deleteRecursive(currentNode, value) {
+                if (currentNode === null) {
+                    return currentNode;
+                }
+                if (value < currentNode.value) {
+                    currentNode.left = this._deleteRecursive(currentNode.left, value);
+                } else if (value > currentNode.value) {
+                    currentNode.right = this._deleteRecursive(currentNode.right, value);
+                } else {
+                    if (currentNode.left === null) {
+                        return currentNode.right;
+                    } else if (currentNode.right === null) {
+                        return currentNode.left;
+                    }
+                    let tempNode = this._findMin(currentNode.right);
+                    currentNode.value = tempNode.value;
+                    currentNode.right = this._deleteRecursive(currentNode.right, tempNode.value);
+                }
+                return currentNode;
+            }
+
+            _findMin(currentNode) {
+                while (currentNode.left !== null) {
+                    currentNode = currentNode.left;
+                }
+                return currentNode;
+            }
+
+            reset() {
+                this.root = null;
+            }
+
+            visualize() {
+                treeVisualization.innerHTML = '';
+                this._visualizeRecursive(this.root, treeVisualization, 0, 0);
+            }
+
+ _visualizeRecursive(currentNode, parentElement, level, left) {
+    if (currentNode !== null) {
+        const nodeElement = document.createElement('div');
+        nodeElement.textContent = currentNode.value;
+        nodeElement.className = 'node';
+        nodeElement.style.top = `${window.innerHeight / 2 + level * 100}px`;
+        nodeElement.style.left = `${window.innerWidth / 2 + left * 150}px`;
+        parentElement.appendChild(nodeElement);
+
+        this._visualizeRecursive(currentNode.left, parentElement, level + 1, left - 1);
+        this._visualizeRecursive(currentNode.right, parentElement, level + 1, left + 1);
+
+        if (currentNode.left !== null) {
+            const leftChildElement = parentElement.querySelector(`div[node-value="${currentNode.left.value}"]`);
+            if (leftChildElement) {
+                this._drawLine(nodeElement, leftChildElement);
+            }
+        }
+
+        if (currentNode.right !== null) {
+            const rightChildElement = parentElement.querySelector(`div[node-value="${currentNode.right.value}"]`);
+            if (rightChildElement) {
+                this._drawLine(nodeElement, rightChildElement);
+            }
+        }
+    }
+}
+
+_drawLine(parentElement, childElement) {
+    const parentRect = parentElement.getBoundingClientRect();
+    const childRect = childElement.getBoundingClientRect();
+
+    const lineElement = document.createElement('div');
+    lineElement.className = 'line';
+    lineElement.style.position = 'absolute';
+    lineElement.style.top = `${Math.min(parentRect.top, childRect.top)}px`;
+    lineElement.style.left = `${Math.min(parentRect.left, childRect.left)}px`;
+    lineElement.style.width = `${Math.abs(childRect.left - parentRect.left)}px`;
+    lineElement.style.height = `${Math.abs(childRect.top - parentRect.top)}px`;
+    lineElement.style.transform = `rotate(${this._calculateAngle(parentRect, childRect)}deg)`;
+    lineElement.style.borderBottom = '2px solid black';
+
+    document.body.appendChild(lineElement);
+}
+
+_calculateAngle(parentRect, childRect) {
+    const dx = childRect.left - parentRect.left;
+    const dy = childRect.top - parentRect.top;
+    return Math.atan2(dy, dx) * 180 / Math.PI;
+}
+        }
+
+        const binaryTree = new BinaryTree();
+
+        insertButton.addEventListener('click', () => {
+            const inputValue = parseInt(inputElement.value);
+            if (!isNaN(inputValue)) {
+                binaryTree.insert(inputValue);
+                binaryTree.visualize();
+                inputElement.value = '';
+            }
+        });
+deleteButton.addEventListener('click', () => {
+    const deleteValue = parseInt(deleteElement.value);
+    if (!isNaN(deleteValue)) {
+        binaryTree.delete(deleteValue);
+        binaryTree.visualize();
+        deleteElement.value = '';
+    }
+});
+
+
+resetButton.addEventListener('click', () => {
+    binaryTree.reset();
+    binaryTree.visualize();
+});
+</script>
+</body>
+</html>

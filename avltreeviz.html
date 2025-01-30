@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AVL Tree Visualizer</title>
+    <link rel="stylesheet" href="Tree Visualizer CSS.css">
+    <link rel="icon" type="image/x-icon" href="https://t3.ftcdn.net/jpg/09/03/38/26/360_F_903382617_o2vVixfgvnDBsXF3WoejB1ss2MIwwSxI.jpg">
+</head>
+<body>
+    <div class="container">
+        <h1>AVL Tree Visualizer</h1>
+        <center>
+            <input id="input-element" type="number" placeholder="Enter a number to insert">
+            <button id="insert-button">Insert</button>
+            <br><br>
+            <input id="delete-element" type="number" placeholder="Enter a number to delete">
+            <button id="delete-button">Delete</button>
+            <br><br>
+            <button id="reset-button">Reset</button>
+            <br><br>
+        </center>
+        <div id="tree-visualization"></div>
+		<button id="undo-button">Undo</button>
+    </div>
+	<p id="balance-status"></p>
+    <script>
+class Node {
+    constructor(value) {
+        this.value = value;
+        this.left = null;
+        this.right = null;
+        this.height = 1;
+    }
+}
+
+class AVLTree {
+    constructor() {
+        this.root = null;
+        this.history = [];
+    }
+
+    getHeight(node) {
+        if (node === null) {
+            return 0;
+        }
+        return node.height;
+    }
+
+    getBalanceFactor(node) {
+        if (node === null) {
+            return 0;
+        }
+        return this.getHeight(node.left) - this.getHeight(node.right);
+    }
+
+    updateHeight(node) {
+        node.height = Math.max(this.getHeight(node.left), this.getHeight(node.right)) + 1;
+    }
+
+    rightRotate(node) {
+        const tempNode = node.left;
+        node.left = tempNode.right;
+        tempNode.right = node;
+
+        this.updateHeight(node);
+        this.updateHeight(tempNode);
+
+        return tempNode;
+    }
+
+    leftRotate(node) {
+        const tempNode = node.right;
+        node.right = tempNode.left;
+        tempNode.left = node;
+
+        this.updateHeight(node);
+        this.updateHeight(tempNode);
+
+        return tempNode;
+    }
+
+    rebalance(node) {
+        this.updateHeight(node);
+
+        const balanceFactor = this.getBalanceFactor(node);
+
+        if (balanceFactor > 1) {
+            if (this.getBalanceFactor(node.left) < 0) {
+                node.left = this.leftRotate(node.left);
+            }
+            return this.rightRotate(node);
+        }
+
+        if (balanceFactor < -1) {
+            if (this.getBalanceFactor(node.right) > 0) {
+                node.right = this.rightRotate(node.right);
+            }
+            return this.leftRotate(node);
+        }
+
+        return node;
+    }
+
+    insert(value) {
+        this.history.push(JSON.parse(JSON.stringify(this.root)));
+        this.root = this._insertRecursive(this.root, value);
+    }
+
+    _insertRecursive(node, value) {
+        if (node === null) {
+            return new Node(value);
+        }
+
+        if (value < node.value) {
+            node.left = this._insertRecursive(node.left, value);
+        } else if (value > node.value) {
+            node.right = this._insertRecursive(node.right, value);
+        }
+
+        return this.rebalance(node);
+    }
+
+    delete(value) {
+        this.history.push(JSON.parse(JSON.stringify(this.root)));
+        this.root = this._deleteRecursive(this.root, value);
+    }
+
+    _deleteRecursive(node, value) {
+        if (node === null) {
+            return node;
+        }
+
+        if (value < node.value) {
+            node.left = this._deleteRecursive(node.left, value);
+        } else if (value > node.value) {
+            node.right = this._deleteRecursive(node.right, value);
+        } else {
+            if (node.left === null) {
+                return node.right;
+            } else if (node.right === null) {
+                return node.left;
+            }
+
+            let tempNode = this._findMin(node.right);
+            node.value = tempNode.value;
+            node.right = this._deleteRecursive(node.right, tempNode.value);
+        }
+
+        return this.rebalance(node);
+    }
+
+    _findMin(node) {
+        while (node.left !== null) {
+            node = node.left;
+        }
+        return node;
+    }
+
+    reset() {
+        this.history.push(JSON.parse(JSON.stringify(this.root)));
+        this.root = null;
+    }
+
+    undo() {
+        if (this.history.length > 0) {
+            this.root = JSON.parse(JSON.stringify(this.history.pop()));
+        }
+    }
+
+visualize() {
+    const treeVisualization = document.getElementById('tree-visualization');
+    const balanceStatus = document.getElementById('balance-status');
+    treeVisualization.innerHTML = '';
+    this._visualizeRecursive(this.root, treeVisualization, 0, 0);
+    const balanceFactor = this.getBalanceFactor(this.root);
+    if (balanceFactor > 1 || balanceFactor < -1) {
+        balanceStatus.textContent = 'Tree is unbalanced';
+        balanceStatus.style.color = 'red';
+    } else {
+        balanceStatus.textContent = 'Tree is balanced';
+        balanceStatus.style.color = 'green';
+    }
+}
+
+    _visualizeRecursive(node, parentElement, level, left) {
+        if (node !== null) {
+            const nodeElement = document.createElement('div');
+            nodeElement.textContent = node.value;
+            nodeElement.className = 'node';
+            nodeElement.style.top = `${window.innerHeight / 2 + level * 100}px`;
+            nodeElement.style.left = `${window.innerWidth / 2 + left * 150}px`;
+            parentElement.appendChild(nodeElement);
+
+            this._visualizeRecursive(node.left, parentElement, level + 1, left - 1);
+            this._visualizeRecursive(node.right, parentElement, level + 1, left + 1);
+
+            if (node.left !== null) {
+                const leftChildElement = parentElement.querySelector(`div[node-value="${node.left.value}"]`);
+                if (leftChildElement) {
+                    this._drawLine(nodeElement, leftChildElement);
+                }
+            }
+
+            
+            if (node.right !== null) {
+                const rightChildElement = parentElement.querySelector(`div[node-value="${node.right.value}"]`);
+                if (rightChildElement) {
+                    this._drawLine(nodeElement, rightChildElement);
+                }
+            }
+        }
+    }
+
+    _drawLine(parentElement, childElement) {
+        const parentRect = parentElement.getBoundingClientRect();
+        const childRect = childElement.getBoundingClientRect();
+
+        const lineElement = document.createElement('div');
+        lineElement.className = 'line';
+        lineElement.style.position = 'absolute';
+        lineElement.style.top = `${Math.min(parentRect.top, childRect.top)}px`;
+        lineElement.style.left = `${Math.min(parentRect.left, childRect.left)}px`;
+        lineElement.style.width = `${Math.abs(childRect.left - parentRect.left)}px`;
+        lineElement.style.height = `${Math.abs(childRect.top - parentRect.top)}px`;
+        lineElement.style.transform = `rotate(${this._calculateAngle(parentRect, childRect)}deg)`;
+        lineElement.style.borderBottom = '2px solid black';
+
+        document.body.appendChild(lineElement);
+    }
+
+    _calculateAngle(parentRect, childRect) {
+        const dx = childRect.left - parentRect.left;
+        const dy = childRect.top - parentRect.top;
+        return Math.atan2(dy, dx) * 180 / Math.PI;
+    }
+}
+
+const avlTree = new AVLTree();
+
+const insertButton = document.getElementById('insert-button');
+const deleteButton = document.getElementById('delete-button');
+const resetButton = document.getElementById('reset-button');
+const inputElement = document.getElementById('input-element');
+const deleteElement = document.getElementById('delete-element');
+
+insertButton.addEventListener('click', () => {
+    const inputValue = parseInt(inputElement.value);
+    if (!isNaN(inputValue)) {
+        avlTree.insert(inputValue);
+        avlTree.visualize();
+        inputElement.value = '';
+    }
+});
+
+deleteButton.addEventListener('click', () => {
+    const deleteValue = parseInt(deleteElement.value);
+    if (!isNaN(deleteValue)) {
+        avlTree.delete(deleteValue);
+        avlTree.visualize();
+        deleteElement.value = '';
+    }
+});
+
+resetButton.addEventListener('click', () => {
+    avlTree.reset();
+    avlTree.visualize();
+});
+
+const undoButton = document.getElementById('undo-button');
+
+undoButton.addEventListener('click', () => {
+    avlTree.undo();
+    avlTree.visualize();
+});
+	</script>
+</body>
+</html>

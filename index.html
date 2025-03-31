@@ -4,7 +4,86 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Binary Tree Visualizer</title>
-    <link rel="stylesheet" href="Tree Visualizer CSS.css">
+	<style>
+		body {
+    font-family: Arial, sans-serif;
+    background-color: #fff;
+}
+.line {
+    position: absolute;
+    background-color: #000;
+    transform-origin: top left;
+}
+.container {
+    max-width: 800px;
+    margin: 40px auto;
+    padding: 20px;
+    background-color: green;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+h1 {
+    text-align: center;
+    margin-bottom: 20px;
+	color: #fff;
+}
+#input-element,#delete-element,reset-element {
+    width: 70%;
+    height: 20px;
+    padding: 10px;
+    font-size: 18px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+#insert-button, #delete-button, reset-button {
+    width: 10%;
+    height: 30px;
+    padding: 5px;
+    font-size: 18px;
+    background-color: white;
+    color: #aaa;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+#reset-button:hover {
+    background-color: #ccc;
+}
+#tree-visualization {
+    margin-top: 20px;
+    position: relative;
+    width: 800px; 
+}
+.node {
+	color: white;
+    position: absolute;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background-color: lime;
+    border: 1px solid #ccc;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 18px;
+}
+.left-node {
+    left: calc(50% - 150px);
+}
+.right-node {
+    left: calc(50% + 100px);
+}
+.level-1 {
+    top: 20px;
+}
+.level-2 {
+    top: 50px;
+}
+.level-3 {
+    top: 80px;
+}
+	</style>
 	<link rel="icon" type="image/x-icon" href="https://t3.ftcdn.net/jpg/09/03/38/26/360_F_903382617_o2vVixfgvnDBsXF3WoejB1ss2MIwwSxI.jpg">
 </head>
 <body>
